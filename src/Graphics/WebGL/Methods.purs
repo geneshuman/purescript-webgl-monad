@@ -1,5 +1,6 @@
 module Graphics.WebGL.Methods where
 
+import Prelude
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Reader.Class (ask)
 import Control.Monad.Error.Class (throwError)
@@ -49,6 +50,20 @@ createBuffer = do
       Just buffer -> return buffer
       Nothing -> throwError $ NullValue "createBuffer"
 
+createTexture :: WebGL WebGLTexture
+createTexture = do
+    result <- ask >>= Raw.createTexture >>> liftEff
+    case result of
+      Just texture -> return texture
+      Nothing -> throwError $ NullValue "createTexture"
+
+createFramebuffer :: WebGL WebGLFramebuffer
+createFramebuffer = do
+    result <- ask >>= Raw.createFramebuffer >>> liftEff
+    case result of
+      Just buffer -> return buffer
+      Nothing -> throwError $ NullValue "createFramebuffer"
+
 createProgram :: WebGL WebGLProgram
 createProgram = do
     ctx <- ask
@@ -65,7 +80,7 @@ createShader stype = do
       Just shader -> return shader
       Nothing -> throwError $ NullValue "createShader"
 
-drawArrays :: DrawMode -> Number -> Number -> WebGL Unit
+drawArrays :: DrawMode -> Int -> Int -> WebGL Unit
 drawArrays mode first count = do
     ctx <- ask
     liftEff $ Raw.drawArrays ctx (toWebglEnum mode) first count
@@ -75,7 +90,7 @@ enableVertexAttribArray (Attribute attr) = do
     ctx <- ask
     liftEff $ Raw.enableVertexAttribArray ctx attr
 
-getError :: WebGL Number
+getError :: WebGL Int
 getError = ask >>= Raw.getError >>> liftEff
 
 getProgramParameter :: forall a. WebGLProgram -> ProgramParam -> WebGL a
@@ -85,6 +100,22 @@ getProgramParameter prog param = do
     case result of
       Just val -> return val
       Nothing -> throwError $ NullValue "getProgramParameter"
+
+getShaderParameter :: forall a. WebGLShader -> ShaderParam -> WebGL a
+getShaderParameter prog param = do
+    ctx <- ask
+    result <- liftEff $ Raw.getShaderParameter ctx prog $ toWebglEnum param
+    case result of
+      Just val -> return val
+      Nothing -> throwError $ NullValue "getShaderParameter"
+
+getShaderInfoLog :: forall a. WebGLShader -> WebGL String
+getShaderInfoLog shader = do
+    ctx <- ask
+    result <- liftEff $ Raw.getShaderInfoLog ctx shader
+    case result of
+      Just val -> return val
+      Nothing -> throwError $ NullValue "getShaderInfoLog"
 
 isContextLost :: WebGL Boolean
 isContextLost = ask >>= Raw.isContextLost >>> liftEff
@@ -184,7 +215,7 @@ vertexAttrib4fv (Attribute a) xs = do
     ctx <- ask
     liftEff $ Raw.vertexAttrib4fv_ ctx a xs
 
-vertexAttribPointer :: forall a. Attribute a -> Number -> DataType -> Boolean -> Number -> Number -> WebGL Unit
+vertexAttribPointer :: forall a. Attribute a -> Int -> DataType -> Boolean -> Int -> Int -> WebGL Unit
 vertexAttribPointer (Attribute attr) size dtype isNormalized stride offset = do
     ctx <- ask
     liftEff $ Raw.vertexAttribPointer ctx attr size (toWebglEnum dtype) isNormalized stride offset

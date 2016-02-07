@@ -7,6 +7,7 @@ module Graphics.WebGL.Context
 , drawingBufferWidth
 ) where
 
+import Prelude
 import Control.Monad.Eff (Eff ())
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Reader.Class (ask)
@@ -40,18 +41,18 @@ getWebglContext canvas = getWebglContextWithAttrs canvas defaultWebglContextAttr
 canvasElement :: WebGL CanvasElement
 canvasElement = _.canvas <$> contextProperties
 
-drawingBufferHeight :: WebGL Number
+drawingBufferHeight :: WebGL Int
 drawingBufferHeight = _.drawingBufferHeight <$> contextProperties
 
-drawingBufferWidth :: WebGL Number
+drawingBufferWidth :: WebGL Int
 drawingBufferWidth = _.drawingBufferWidth <$> contextProperties
 
 -- private functions
 
 type ContextProperties =
   { canvas              :: CanvasElement
-  , drawingBufferWidth  :: Number
-  , drawingBufferHeight :: Number
+  , drawingBufferWidth  :: Int
+  , drawingBufferHeight :: Int
   }
 
 contextProperties :: WebGL ContextProperties
@@ -59,16 +60,4 @@ contextProperties = ask >>= (unsafeCoerce :: WebGLContext -> ContextProperties) 
 
 -- foreigns
 
-foreign import getWebglContextWithAttrsImpl """
-  function getWebglContextWithAttrsImpl(canvas, attrs, Just, Nothing) {
-    return function () {
-      try {
-        return Just(
-          canvas.getContext('webgl', attrs) || canvas.getContext('experimental-webgl', attrs)
-        );
-      } catch(err) {
-        return Nothing;
-      };
-    }
-  }
-""" :: forall eff maybe. Fn4 CanvasElement WebGLContextAttributes (WebGLContext -> maybe) maybe (Eff (canvas :: Canvas | eff) (Maybe WebGLContext))
+foreign import getWebglContextWithAttrsImpl :: forall eff maybe. Fn4 CanvasElement WebGLContextAttributes (WebGLContext -> maybe) maybe (Eff (canvas :: Canvas | eff) (Maybe WebGLContext))

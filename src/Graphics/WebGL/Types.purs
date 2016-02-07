@@ -1,15 +1,17 @@
 module Graphics.WebGL.Types where
 
-import Control.Monad.Error.Trans (ErrorT ())
+import Prelude
+import Control.Monad.Except.Trans (ExceptT ())
 import Control.Monad.Eff (Eff ())
 import Control.Monad.Reader.Trans (ReaderT ())
 import Data.ArrayBuffer.Types (Float32Array ())
+import Data.Int (toNumber)
 import Graphics.Canvas (Canvas ())
 
 import qualified Graphics.WebGL.Raw.Enums as Enum
 import qualified Graphics.WebGL.Raw.Types as Raw
 
-type WebGLT eff a = ReaderT Raw.WebGLContext (ErrorT WebGLError eff) a
+type WebGLT eff a = ReaderT Raw.WebGLContext (ExceptT WebGLError eff) a
 type WebGL a = forall eff. WebGLT (Eff (canvas :: Canvas | eff)) a
 
 data WebGLError
@@ -23,13 +25,15 @@ instance showWebGLError :: Show WebGLError where
       ContextLost     -> prefix ++ "lost the WebGL context"
       ErrorCode code  -> prefix ++ show code
       NullValue fname -> prefix ++ "null value in " ++ fname ++ " (due to an OpenGL error)"
-      ShaderError str -> prefix ++ str
+      ShaderError str -> "Shader Error: " ++ str
     where
       prefix = "WebGL Error: "
 
 -- re-exported from Raw
 
 type WebGLBuffer            = Raw.WebGLBuffer
+type WebGLFramebuffer       = Raw.WebGLFramebuffer
+type WebGLTexture           = Raw.WebGLTexture
 type WebGLContext           = Raw.WebGLContext
 type WebGLContextAttributes = Raw.WebGLContextAttributes
 type WebGLProgram           = Raw.WebGLProgram
@@ -56,16 +60,16 @@ data Mat4 = Mat4    Number Number Number Number
 
 -- attributes and uniforms
 
-newtype Attribute a = Attribute Number
+newtype Attribute a = Attribute Int
 newtype Uniform a   = Uniform WebGLUniformLocation
 
 -- wrapped GLenums
 
 class ToWebGLEnum a where
-  toWebglEnum :: a -> Number
+  toWebglEnum :: a -> Int
 
 class FromWebGLEnum a where
-  fromWebglEnum :: Number -> a
+  fromWebglEnum :: Int -> a
 
 data ArrayBufferType
   = ArrayBuffer
@@ -171,6 +175,17 @@ instance toWebglEnumProgramParam :: ToWebGLEnum ProgramParam where
   toWebglEnum ActiveAttrs     = Enum.activeAttributes
   toWebglEnum ActiveUniforms  = Enum.activeUniforms
 
+data ShaderParam
+  = ShaderTypeSP
+  | DeleteStatusSP
+  | CompileStatusSP
+
+instance toWebglEnumShaderParam :: ToWebGLEnum ShaderParam where
+  toWebglEnum ShaderTypeSP     = Enum.shaderType
+  toWebglEnum DeleteStatusSP   = Enum.deleteStatus
+  toWebglEnum CompileStatusSP  = Enum.compileStatus
+
+
 data ShaderType
   = FragmentShader
   | VertexShader
@@ -182,5 +197,5 @@ instance toWebglEnumShader :: ToWebGLEnum ShaderType where
 -- params for polymorphic raw functions
 
 data BufferData
-  = DataSize Number
+  = DataSize Int
   | DataSource Float32Array

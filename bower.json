@@ -1,24 +1,28 @@
 {
-  "name":         "purescript-webgl-monad",
-  "description":  "a monad for WebGL methods",
-  "version":      "0.1.0",
-  "license":      "MIT",
-
+  "name": "purescript-webgl-monad",
+  "description": "a monad for WebGL methods",
+  "version": "0.1.0",
+  "license": "MIT",
   "ignore": [
     "**/.*",
     "node_modules",
     "bower_components",
     "dist"
   ],
-
   "dependencies": {
-    "purescript-arraybuffer-types":     "0.1.*",
-    "purescript-canvas":                "0.2.*",
-    "purescript-either":                "0.1.*",
-    "purescript-foldable-traversable":  "0.3.*",
-    "purescript-monad-eff":             "0.1.*",
-    "purescript-transformers":          "0.5.*",
-    "purescript-typedarray":            "0.3.*",
-    "purescript-webgl-raw":             "git@github.com:Jonplussed/purescript-webgl-raw.git#master"
+    "purescript-arraybuffer-types": "*",
+    "purescript-extensions": "*",
+    "purescript-strings": "*",
+    "purescript-canvas": "*",
+    "purescript-either": "*",
+    "purescript-foldable-traversable": "*",
+    "purescript-eff": "*",
+    "purescript-integers": "*",
+    "purescript-transformers": "*",
+    "purescript-typedarray": "*",
+    "purescript-webgl-raw": "git@github.com:geneshuman/purescript-webgl-raw.git"
+  },
+  "devDependencies": {
+    "purescript-psci-support": "^1.0.0"
   }
 }

@@ -1,9 +1,10 @@
 module Graphics.WebGL where
 
+import Prelude
 import Control.Monad (when)
 import Control.Monad.Eff (Eff ())
 import Control.Monad.Error.Class (throwError)
-import Control.Monad.Error.Trans (runErrorT)
+import Control.Monad.Except.Trans (runExceptT)
 import Control.Monad.Reader.Trans (runReaderT)
 import Data.Either (Either ())
 import Data.Maybe (Maybe (..))
@@ -17,7 +18,7 @@ import Graphics.WebGL.Shader
 import Graphics.WebGL.Types
 
 runWebgl :: forall eff a. WebGL a -> Raw.WebGLContext -> Eff (canvas :: Canvas | eff) (Either WebGLError a)
-runWebgl f ctx = runErrorT $ runReaderT f ctx
+runWebgl f ctx = runExceptT $ runReaderT f ctx
 
 runWebglWithShaders :: forall eff attrs uniforms a. (WebGLProgram -> Object attrs -> Object uniforms -> WebGL a) -> WebGLContext -> String -> String -> Eff (canvas :: Canvas | eff) (Either WebGLError a)
 runWebglWithShaders f ctx vertSrc fragSrc = runWebgl (do

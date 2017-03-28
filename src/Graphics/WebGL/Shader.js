@@ -1,7 +1,5 @@
 "use strict";
 
-// module Graphics.WebGL.Shader
-
 exports.getAttrBindingsImpl = function getAttrBindingsImpl(ctx, prog, wrapper) {
   return function () {
     var all, attr, count, loc;

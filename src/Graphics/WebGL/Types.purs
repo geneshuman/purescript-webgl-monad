@@ -6,13 +6,13 @@ import Control.Monad.Eff (Eff ())
 import Control.Monad.Reader.Trans (ReaderT ())
 import Data.ArrayBuffer.Types (Float32Array ())
 import Data.Int (toNumber)
-import Graphics.Canvas (Canvas ())
+import Graphics.Canvas (CANVAS)
 
-import qualified Graphics.WebGL.Raw.Enums as Enum
-import qualified Graphics.WebGL.Raw.Types as Raw
+import Graphics.WebGL.Raw.Enums as Enum
+import Graphics.WebGL.Raw.Types as Raw
 
 type WebGLT eff a = ReaderT Raw.WebGLContext (ExceptT WebGLError eff) a
-type WebGL a = forall eff. WebGLT (Eff (canvas :: Canvas | eff)) a
+type WebGL a = forall eff. WebGLT (Eff (canvas :: CANVAS | eff)) a
 
 data WebGLError
   = ContextLost
@@ -22,10 +22,10 @@ data WebGLError
 
 instance showWebGLError :: Show WebGLError where
   show err = case err of
-      ContextLost     -> prefix ++ "lost the WebGL context"
-      ErrorCode code  -> prefix ++ show code
-      NullValue fname -> prefix ++ "null value in " ++ fname ++ " (due to an OpenGL error)"
-      ShaderError str -> "Shader Error: " ++ str
+      ContextLost     -> prefix <> "lost the WebGL context"
+      ErrorCode code  -> prefix <> show code
+      NullValue fname -> prefix <> "null value in " <> fname <> " (due to an OpenGL error)"
+      ShaderError str -> "Shader Error: " <> str
     where
       prefix = "WebGL Error: "
 

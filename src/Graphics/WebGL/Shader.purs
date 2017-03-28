@@ -4,26 +4,27 @@ module Graphics.WebGL.Shader
 , getAttrBindings
 , getUniformBindings
 , linkProgram
+, Object
 ) where
 
-import Prelude
-import Graphics.WebGL.Types
+import Prelude (Unit, bind, not, pure, show, unit, when, ($), (+), (<), (<>), (>>=), (>>>))
+import Graphics.WebGL.Types (Attribute(..), ProgramParam(..), ShaderParam(..), ShaderType(..), Uniform(..), Vec2(..), Vec3(..), Vec4(..), WebGL, WebGLContext, WebGLError(..), WebGLProgram, WebGLShader, WebGLUniformLocation)
 import Graphics.WebGL.Methods as GL
 import Graphics.WebGL.Raw as GLR
-import Graphics.WebGL.Raw.Types as Raw
-import Control.Monad (when)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Reader.Class (ask)
 import Data.Foldable (foldl)
-import Data.Function (Fn3(..), runFn3)
+import Data.Function.Uncurried (Fn3, runFn3)
 import Data.Maybe (Maybe(..))
-import Data.String (length, split)
+import Data.String (Pattern(..), length, split)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..), snd)
-import Graphics.Canvas (Canvas)
+import Graphics.Canvas (CANVAS)
 import Graphics.WebGL.Raw.Util (toMaybe)
+
+foreign import data Object :: * -> *
 
 class SetVertAttr a where
   setVertAttr :: Attribute a -> a -> WebGL Unit
@@ -77,17 +78,17 @@ checkShader shader = do
       res <- liftEff $ GLR.getShaderSource ctx shader
       err <- GL.getShaderInfoLog shader
       case res of
-        Just src -> throwError $ ShaderError ("\n\n--------------SHADER-------------:" ++ (annotateSource src) ++ "\n\n--------------ERRORS--------------\n" ++ err)
+        Just src -> throwError $ ShaderError ("\n\n--------------SHADER-------------:" <> (annotateSource src) <> "\n\n--------------ERRORS--------------\n" <> err)
         Nothing -> throwError $ ShaderError "no source?"
 
 annotateSource :: String -> String
 annotateSource src =
-  snd $ foldl handle (Tuple 1 "") (split "\n" src)
+  snd $ foldl handle (Tuple 1 "") (split (Pattern "\n") src)
   where
-    handle (Tuple n dt) l = Tuple (n + 1) (dt ++ "\n" ++ (pad (show n) 3) ++ " - " ++ l)
+    handle (Tuple n dt) l = Tuple (n + 1) (dt <> "\n" <> (pad (show n) 3) <> " - " <> l)
 
 pad :: String -> Int -> String
-pad s w | (length s < w) = pad (" " ++ s) w
+pad s w | (length s < w) = pad (" " <> s) w
 pad s _ = s
 
 compileShadersIntoProgram :: String -> String -> WebGL WebGLProgram
@@ -96,7 +97,7 @@ compileShadersIntoProgram vertSrc fragSrc = do
     addShaderToProgram prog VertexShader vertSrc
     addShaderToProgram prog FragmentShader fragSrc
 
-    return prog
+    pure prog
 
 -- checks for errors & shit
 linkProgram :: WebGLProgram -> WebGL Unit
@@ -108,14 +109,14 @@ linkProgram prog = do
 
   isLinked <- GL.getProgramParameter prog LinkStatus
   when (not isLinked) (throwError shaderLinkError)
-  return unit
+  pure unit
 
 getAttrBindings :: forall bindings. WebGLProgram -> WebGL (Object bindings)
 getAttrBindings prog = do
     ctx <- ask
     result <- liftEff $ getAttrBindings_ ctx prog
     case result of
-      Just val -> return val
+      Just val -> pure val
       Nothing -> throwError $ NullValue "getAttrBindings"
 
 getUniformBindings :: forall bindings. WebGLProgram -> WebGL (Object bindings)
@@ -123,17 +124,17 @@ getUniformBindings prog = do
     ctx <- ask
     result <- liftEff $ getUniformBindings_ ctx prog
     case result of
-      Just val -> return val
+      Just val -> pure val
       Nothing -> throwError $ NullValue "getUniformBindings"
 
 -- foreigns
 
-foreign import getAttrBindingsImpl :: forall eff bindings a. Fn3 WebGLContext WebGLProgram (Int -> Attribute a) (Eff (canvas :: Canvas | eff) (Object bindings))
+foreign import getAttrBindingsImpl :: forall eff bindings a. Fn3 WebGLContext WebGLProgram (Int -> Attribute a) (Eff (canvas :: CANVAS | eff) (Object bindings))
 
-getAttrBindings_ :: forall eff bindings a. WebGLContext -> WebGLProgram -> Eff (canvas :: Canvas | eff) (Maybe (Object bindings))
-getAttrBindings_ ctx prog = runFn3 getAttrBindingsImpl ctx prog Attribute >>= toMaybe >>> return
+getAttrBindings_ :: forall eff bindings. WebGLContext -> WebGLProgram -> Eff (canvas :: CANVAS | eff) (Maybe (Object bindings))
+getAttrBindings_ ctx prog = runFn3 getAttrBindingsImpl ctx prog Attribute >>= toMaybe >>> pure
 
-foreign import getUniformBindingsImpl :: forall eff bindings a. Fn3 WebGLContext WebGLProgram (WebGLUniformLocation -> Uniform a) (Eff (canvas :: Canvas | eff) (Object bindings))
+foreign import getUniformBindingsImpl :: forall eff bindings a. Fn3 WebGLContext WebGLProgram (WebGLUniformLocation -> Uniform a) (Eff (canvas :: CANVAS | eff) (Object bindings))
 
-getUniformBindings_ :: forall eff bindings a. WebGLContext -> WebGLProgram -> Eff (canvas :: Canvas | eff) (Maybe (Object bindings))
-getUniformBindings_ ctx prog = runFn3 getUniformBindingsImpl ctx prog Uniform >>= toMaybe >>> return
+getUniformBindings_ :: forall eff bindings. WebGLContext -> WebGLProgram -> Eff (canvas :: CANVAS | eff) (Maybe (Object bindings))
+getUniformBindings_ ctx prog = runFn3 getUniformBindingsImpl ctx prog Uniform >>= toMaybe >>> pure

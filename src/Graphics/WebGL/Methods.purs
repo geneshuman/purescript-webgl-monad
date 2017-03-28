@@ -7,7 +7,7 @@ import Control.Monad.Error.Class (throwError)
 import Data.ArrayBuffer.Types (Float32Array ())
 import Data.Maybe (Maybe (..))
 
-import qualified Graphics.WebGL.Raw as Raw
+import Graphics.WebGL.Raw as Raw
 
 import Graphics.WebGL.Types
 
@@ -47,21 +47,21 @@ createBuffer :: WebGL WebGLBuffer
 createBuffer = do
     result <- ask >>= Raw.createBuffer >>> liftEff
     case result of
-      Just buffer -> return buffer
+      Just buffer -> pure buffer
       Nothing -> throwError $ NullValue "createBuffer"
 
 createTexture :: WebGL WebGLTexture
 createTexture = do
     result <- ask >>= Raw.createTexture >>> liftEff
     case result of
-      Just texture -> return texture
+      Just texture -> pure texture
       Nothing -> throwError $ NullValue "createTexture"
 
 createFramebuffer :: WebGL WebGLFramebuffer
 createFramebuffer = do
     result <- ask >>= Raw.createFramebuffer >>> liftEff
     case result of
-      Just buffer -> return buffer
+      Just buffer -> pure buffer
       Nothing -> throwError $ NullValue "createFramebuffer"
 
 createProgram :: WebGL WebGLProgram
@@ -69,7 +69,7 @@ createProgram = do
     ctx <- ask
     result <- liftEff $ Raw.createProgram ctx
     case result of
-      Just prog -> return prog
+      Just prog -> pure prog
       Nothing -> throwError $ NullValue "createProgram"
 
 createShader :: ShaderType -> WebGL WebGLShader
@@ -77,7 +77,7 @@ createShader stype = do
     ctx <- ask
     result <- liftEff $ Raw.createShader ctx $ toWebglEnum stype
     case result of
-      Just shader -> return shader
+      Just shader -> pure shader
       Nothing -> throwError $ NullValue "createShader"
 
 drawArrays :: DrawMode -> Int -> Int -> WebGL Unit
@@ -98,7 +98,7 @@ getProgramParameter prog param = do
     ctx <- ask
     result <- liftEff $ Raw.getProgramParameter ctx prog $ toWebglEnum param
     case result of
-      Just val -> return val
+      Just val -> pure val
       Nothing -> throwError $ NullValue "getProgramParameter"
 
 getShaderParameter :: forall a. WebGLShader -> ShaderParam -> WebGL a
@@ -106,7 +106,7 @@ getShaderParameter prog param = do
     ctx <- ask
     result <- liftEff $ Raw.getShaderParameter ctx prog $ toWebglEnum param
     case result of
-      Just val -> return val
+      Just val -> pure val
       Nothing -> throwError $ NullValue "getShaderParameter"
 
 getShaderInfoLog :: forall a. WebGLShader -> WebGL String
@@ -114,7 +114,7 @@ getShaderInfoLog shader = do
     ctx <- ask
     result <- liftEff $ Raw.getShaderInfoLog ctx shader
     case result of
-      Just val -> return val
+      Just val -> pure val
       Nothing -> throwError $ NullValue "getShaderInfoLog"
 
 isContextLost :: WebGL Boolean

@@ -7,16 +7,15 @@ module Graphics.WebGL.Context
 , drawingBufferWidth
 ) where
 
-import Prelude
+import Prelude (pure, (<$>), (>>=), (>>>))
 import Control.Monad.Eff (Eff ())
-import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Reader.Class (ask)
-import Data.Function (Fn4 (..), runFn4)
+import Data.Function.Uncurried (Fn4, runFn4)
 import Data.Maybe (Maybe (..))
-import Graphics.Canvas (Canvas (), CanvasElement ())
+import Graphics.Canvas (CANVAS, CanvasElement ())
 import Graphics.WebGL.Unsafe (unsafeCoerce)
 
-import Graphics.WebGL.Types
+import Graphics.WebGL.Types (WebGL, WebGLContext, WebGLContextAttributes)
 
 defaultWebglContextAttrs :: WebGLContextAttributes
 defaultWebglContextAttrs =
@@ -30,10 +29,10 @@ defaultWebglContextAttrs =
   , failIfMajorPerformanceCaveat:     false
   }
 
-getWebglContextWithAttrs :: forall eff. CanvasElement -> WebGLContextAttributes -> Eff (canvas :: Canvas | eff) (Maybe WebGLContext)
+getWebglContextWithAttrs :: forall eff. CanvasElement -> WebGLContextAttributes -> Eff (canvas :: CANVAS | eff) (Maybe WebGLContext)
 getWebglContextWithAttrs canvas attrs = runFn4 getWebglContextWithAttrsImpl canvas attrs Just Nothing
 
-getWebglContext :: forall eff. CanvasElement -> Eff (canvas :: Canvas | eff) (Maybe WebGLContext)
+getWebglContext :: forall eff. CanvasElement -> Eff (canvas :: CANVAS | eff) (Maybe WebGLContext)
 getWebglContext canvas = getWebglContextWithAttrs canvas defaultWebglContextAttrs
 
 -- context properties
@@ -56,8 +55,8 @@ type ContextProperties =
   }
 
 contextProperties :: WebGL ContextProperties
-contextProperties = ask >>= (unsafeCoerce :: WebGLContext -> ContextProperties) >>> return
+contextProperties = ask >>= (unsafeCoerce :: WebGLContext -> ContextProperties) >>> pure
 
 -- foreigns
 
-foreign import getWebglContextWithAttrsImpl :: forall eff maybe. Fn4 CanvasElement WebGLContextAttributes (WebGLContext -> maybe) maybe (Eff (canvas :: Canvas | eff) (Maybe WebGLContext))
+foreign import getWebglContextWithAttrsImpl :: forall eff maybe. Fn4 CanvasElement WebGLContextAttributes (WebGLContext -> maybe) maybe (Eff (canvas :: CANVAS | eff) (Maybe WebGLContext))

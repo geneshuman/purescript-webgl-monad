@@ -11,13 +11,13 @@ import Graphics.Canvas (CANVAS)
 import Graphics.WebGL.Raw.Types as Raw
 
 import Graphics.WebGL.Methods (getError, isContextLost)
-import Graphics.WebGL.Shader (Object, compileShadersIntoProgram, getAttrBindings, getUniformBindings)
+import Graphics.WebGL.Shader (compileShadersIntoProgram, getAttrBindings, getUniformBindings)
 import Graphics.WebGL.Types (ErrorCode(..), WebGL, WebGLContext, WebGLError(..), WebGLProgram, fromWebglEnum)
 
 runWebgl :: forall eff a. WebGL a -> Raw.WebGLContext -> Eff (canvas :: CANVAS | eff) (Either WebGLError a)
 runWebgl f ctx = runExceptT $ runReaderT f ctx
 
-runWebglWithShaders :: forall eff attrs uniforms a. (WebGLProgram -> Object attrs -> Object uniforms -> WebGL a) -> WebGLContext -> String -> String -> Eff (canvas :: CANVAS | eff) (Either WebGLError a)
+runWebglWithShaders :: forall eff attrs uniforms a. (WebGLProgram -> Record attrs -> Record uniforms -> WebGL a) -> WebGLContext -> String -> String -> Eff (canvas :: CANVAS | eff) (Either WebGLError a)
 runWebglWithShaders f ctx vertSrc fragSrc = runWebgl (do
     prog <- compileShadersIntoProgram vertSrc fragSrc
     attr <- getAttrBindings prog

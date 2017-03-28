@@ -4,7 +4,6 @@ module Graphics.WebGL.Shader
 , getAttrBindings
 , getUniformBindings
 , linkProgram
-, Object
 ) where
 
 import Prelude (Unit, bind, not, pure, show, unit, when, ($), (+), (<), (<>), (>>=), (>>>))
@@ -111,7 +110,7 @@ linkProgram prog = do
   when (not isLinked) (throwError shaderLinkError)
   pure unit
 
-getAttrBindings :: forall bindings. WebGLProgram -> WebGL (Object bindings)
+getAttrBindings :: forall bindings. WebGLProgram -> WebGL (Record bindings)
 getAttrBindings prog = do
     ctx <- ask
     result <- liftEff $ getAttrBindings_ ctx prog
@@ -119,7 +118,7 @@ getAttrBindings prog = do
       Just val -> pure val
       Nothing -> throwError $ NullValue "getAttrBindings"
 
-getUniformBindings :: forall bindings. WebGLProgram -> WebGL (Object bindings)
+getUniformBindings :: forall bindings. WebGLProgram -> WebGL (Record bindings)
 getUniformBindings prog = do
     ctx <- ask
     result <- liftEff $ getUniformBindings_ ctx prog
@@ -129,12 +128,12 @@ getUniformBindings prog = do
 
 -- foreigns
 
-foreign import getAttrBindingsImpl :: forall eff bindings a. Fn3 WebGLContext WebGLProgram (Int -> Attribute a) (Eff (canvas :: CANVAS | eff) (Object bindings))
+foreign import getAttrBindingsImpl :: forall eff bindings a. Fn3 WebGLContext WebGLProgram (Int -> Attribute a) (Eff (canvas :: CANVAS | eff) (Record bindings))
 
-getAttrBindings_ :: forall eff bindings. WebGLContext -> WebGLProgram -> Eff (canvas :: CANVAS | eff) (Maybe (Object bindings))
+getAttrBindings_ :: forall eff bindings. WebGLContext -> WebGLProgram -> Eff (canvas :: CANVAS | eff) (Maybe (Record bindings))
 getAttrBindings_ ctx prog = runFn3 getAttrBindingsImpl ctx prog Attribute >>= toMaybe >>> pure
 
-foreign import getUniformBindingsImpl :: forall eff bindings a. Fn3 WebGLContext WebGLProgram (WebGLUniformLocation -> Uniform a) (Eff (canvas :: CANVAS | eff) (Object bindings))
+foreign import getUniformBindingsImpl :: forall eff bindings a. Fn3 WebGLContext WebGLProgram (WebGLUniformLocation -> Uniform a) (Eff (canvas :: CANVAS | eff) (Record bindings))
 
-getUniformBindings_ :: forall eff bindings. WebGLContext -> WebGLProgram -> Eff (canvas :: CANVAS | eff) (Maybe (Object bindings))
+getUniformBindings_ :: forall eff bindings. WebGLContext -> WebGLProgram -> Eff (canvas :: CANVAS | eff) (Maybe (Record bindings))
 getUniformBindings_ ctx prog = runFn3 getUniformBindingsImpl ctx prog Uniform >>= toMaybe >>> pure

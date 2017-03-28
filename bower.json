@@ -1,7 +1,7 @@
 {
   "name": "purescript-webgl-monad",
   "description": "a monad for WebGL methods",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "license": "MIT",
   "ignore": [
     "**/.*",

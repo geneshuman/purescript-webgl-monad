@@ -2,17 +2,17 @@ module Graphics.WebGL.Types where
 
 import Prelude
 import Control.Monad.Except.Trans (ExceptT ())
-import Control.Monad.Eff (Eff ())
+
 import Control.Monad.Reader.Trans (ReaderT ())
 import Data.ArrayBuffer.Types (Float32Array ())
 import Data.Int (toNumber)
-import Graphics.Canvas (CANVAS)
+import Effect (Effect)
 
 import Graphics.WebGL.Raw.Enums as Enum
 import Graphics.WebGL.Raw.Types as Raw
 
 type WebGLT eff a = ReaderT Raw.WebGLContext (ExceptT WebGLError eff) a
-type WebGL a = forall eff. WebGLT (Eff (canvas :: CANVAS | eff)) a
+type WebGL a = forall eff. WebGLT (Effect) a
 
 data WebGLError
   = ContextLost

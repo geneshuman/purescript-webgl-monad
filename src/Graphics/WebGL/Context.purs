@@ -8,11 +8,11 @@ module Graphics.WebGL.Context
 ) where
 
 import Prelude (pure, (<$>), (>>=), (>>>))
-import Control.Monad.Eff (Eff ())
 import Control.Monad.Reader.Class (ask)
 import Data.Function.Uncurried (Fn4, runFn4)
 import Data.Maybe (Maybe (..))
-import Graphics.Canvas (CANVAS, CanvasElement ())
+import Effect (Effect)
+import Graphics.Canvas (CanvasElement ())
 import Graphics.WebGL.Unsafe (unsafeCoerce)
 
 import Graphics.WebGL.Types (WebGL, WebGLContext, WebGLContextAttributes)
@@ -29,10 +29,10 @@ defaultWebglContextAttrs =
   , failIfMajorPerformanceCaveat:     false
   }
 
-getWebglContextWithAttrs :: forall eff. CanvasElement -> WebGLContextAttributes -> Eff (canvas :: CANVAS | eff) (Maybe WebGLContext)
+getWebglContextWithAttrs :: CanvasElement -> WebGLContextAttributes -> Effect (Maybe WebGLContext)
 getWebglContextWithAttrs canvas attrs = runFn4 getWebglContextWithAttrsImpl canvas attrs Just Nothing
 
-getWebglContext :: forall eff. CanvasElement -> Eff (canvas :: CANVAS | eff) (Maybe WebGLContext)
+getWebglContext :: CanvasElement -> Effect (Maybe WebGLContext)
 getWebglContext canvas = getWebglContextWithAttrs canvas defaultWebglContextAttrs
 
 -- context properties
@@ -59,4 +59,4 @@ contextProperties = ask >>= (unsafeCoerce :: WebGLContext -> ContextProperties) 
 
 -- foreigns
 
-foreign import getWebglContextWithAttrsImpl :: forall eff maybe. Fn4 CanvasElement WebGLContextAttributes (WebGLContext -> maybe) maybe (Eff (canvas :: CANVAS | eff) (Maybe WebGLContext))
+foreign import getWebglContextWithAttrsImpl :: forall maybe. Fn4 CanvasElement WebGLContextAttributes (WebGLContext -> maybe) maybe (Effect (Maybe WebGLContext))

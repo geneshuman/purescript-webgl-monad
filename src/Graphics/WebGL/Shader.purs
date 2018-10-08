@@ -6,12 +6,10 @@ module Graphics.WebGL.Shader
 , linkProgram
 ) where
 
-import Prelude (Unit, bind, not, pure, show, unit, when, ($), (+), (<), (<>), (>>=), (>>>))
+import Prelude
 import Graphics.WebGL.Types (Attribute(..), ProgramParam(..), ShaderParam(..), ShaderType(..), Uniform(..), Vec2(..), Vec3(..), Vec4(..), WebGL, WebGLContext, WebGLError(..), WebGLProgram, WebGLShader, WebGLUniformLocation)
 import Graphics.WebGL.Methods as GL
 import Graphics.WebGL.Raw as GLR
-import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Reader.Class (ask)
 import Data.Foldable (foldl)
@@ -20,10 +18,11 @@ import Data.Maybe (Maybe(..))
 import Data.String (Pattern(..), length, split)
 import Data.Traversable (traverse)
 import Data.Tuple (Tuple(..), snd)
-import Graphics.Canvas (CANVAS)
+import Effect (Effect)
+import Effect.Class (liftEffect)
 import Graphics.WebGL.Raw.Util (toMaybe)
 
-foreign import data Object :: * -> *
+foreign import data Object :: Type -> Type
 
 class SetVertAttr a where
   setVertAttr :: Attribute a -> a -> WebGL Unit
@@ -74,7 +73,7 @@ checkShader shader = do
     status <- GL.getShaderParameter shader CompileStatusSP
     when (not status) do
       ctx <- ask
-      res <- liftEff $ GLR.getShaderSource ctx shader
+      res <- liftEffect $ GLR.getShaderSource ctx shader
       err <- GL.getShaderInfoLog shader
       case res of
         Just src -> throwError $ ShaderError ("\n\n--------------SHADER-------------:" <> (annotateSource src) <> "\n\n--------------ERRORS--------------\n" <> err)
@@ -103,8 +102,8 @@ linkProgram :: WebGLProgram -> WebGL Unit
 linkProgram prog = do
   GL.linkProgram prog
   ctx <- ask
-  shaders <- liftEff $ GLR.getAttachedShaders ctx prog
-  traverse checkShader shaders
+  shaders <- liftEffect $ GLR.getAttachedShaders ctx prog
+  _ <- traverse checkShader shaders
 
   isLinked <- GL.getProgramParameter prog LinkStatus
   when (not isLinked) (throwError shaderLinkError)
@@ -113,7 +112,7 @@ linkProgram prog = do
 getAttrBindings :: forall bindings. WebGLProgram -> WebGL (Record bindings)
 getAttrBindings prog = do
     ctx <- ask
-    result <- liftEff $ getAttrBindings_ ctx prog
+    result <- liftEffect $ getAttrBindings_ ctx prog
     case result of
       Just val -> pure val
       Nothing -> throwError $ NullValue "getAttrBindings"
@@ -121,19 +120,19 @@ getAttrBindings prog = do
 getUniformBindings :: forall bindings. WebGLProgram -> WebGL (Record bindings)
 getUniformBindings prog = do
     ctx <- ask
-    result <- liftEff $ getUniformBindings_ ctx prog
+    result <- liftEffect $ getUniformBindings_ ctx prog
     case result of
       Just val -> pure val
       Nothing -> throwError $ NullValue "getUniformBindings"
 
 -- foreigns
 
-foreign import getAttrBindingsImpl :: forall eff bindings a. Fn3 WebGLContext WebGLProgram (Int -> Attribute a) (Eff (canvas :: CANVAS | eff) (Record bindings))
+foreign import getAttrBindingsImpl :: forall bindings a. Fn3 WebGLContext WebGLProgram (Int -> Attribute a) (Effect(Record bindings))
 
-getAttrBindings_ :: forall eff bindings. WebGLContext -> WebGLProgram -> Eff (canvas :: CANVAS | eff) (Maybe (Record bindings))
+getAttrBindings_ :: forall bindings. WebGLContext -> WebGLProgram -> Effect(Maybe (Record bindings))
 getAttrBindings_ ctx prog = runFn3 getAttrBindingsImpl ctx prog Attribute >>= toMaybe >>> pure
 
-foreign import getUniformBindingsImpl :: forall eff bindings a. Fn3 WebGLContext WebGLProgram (WebGLUniformLocation -> Uniform a) (Eff (canvas :: CANVAS | eff) (Record bindings))
+foreign import getUniformBindingsImpl :: forall bindings a. Fn3 WebGLContext WebGLProgram (WebGLUniformLocation -> Uniform a) (Effect(Record bindings))
 
-getUniformBindings_ :: forall eff bindings. WebGLContext -> WebGLProgram -> Eff (canvas :: CANVAS | eff) (Maybe (Record bindings))
+getUniformBindings_ :: forall bindings. WebGLContext -> WebGLProgram -> Effect(Maybe (Record bindings))
 getUniformBindings_ ctx prog = runFn3 getUniformBindingsImpl ctx prog Uniform >>= toMaybe >>> pure
